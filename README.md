@@ -19,7 +19,7 @@ const salus = new Salus({ username: "example@email.com", password: "password" })
 await salus.getDevices().then(res => console.log(res))
 
 // set temperature
-salus.updateTemperature(id, temperature);
+await salus.updateTemperature("id","temp*100").then(res => console.log(res));
 ```
 
 ## Contributing

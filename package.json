@@ -8,12 +8,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/adrmnt/salus-it600-pack"
+    "url": "git+https://github.com/adrmnt/salus-it600-pack.git"
   },
   "bugs": {
     "url": "https://github.com/adrmnt/salus-it600-pack/issues"
   },
-  "keywords": ["salus", "iT600"],
+  "keywords": [
+    "salus",
+    "iT600"
+  ],
   "author": "Adrian Manta",
-  "license": "ISC"
+  "license": "ISC",
+  "homepage": "https://github.com/adrmnt/salus-it600-pack#readme",
+  "dependencies": {
+    "salus-it600-pack": "^1.0.0"
+  }
 }

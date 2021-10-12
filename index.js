@@ -51,46 +51,47 @@ class Index {
 
     async getDevices() {
         await this.login();
-        const options = {
-            host: baseUrl,
-            port: 443,
-            path: apiVersion + devicesUrl + this.appendTimestamp(),
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + this.token
+        return new Promise((resolve, reject) => {
+            const options = {
+                host: baseUrl,
+                port: 443,
+                path: apiVersion + devicesUrl + this.appendTimestamp(),
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + this.token
+                }
             }
-        }
 
-        const req = https.request(options, res => {
-            res.on('data', async d => {
-                const result = [];
+            const req = https.request(options, res => {
+                res.on('data', async d => {
+                    const result = [];
 
-                function Item(id, name, currentTemperature, targetTemperature, humidity, heating) {
-                    this.id = id;
-                    this.name = name;
-                    this.current = currentTemperature;
-                    this.target = targetTemperature;
-                    this.humidity = humidity;
-                    this.heating = heating;
-                }
-
-                for (const e of JSON.parse(d.toString())) {
-                    const device = e.device;
-                    if (device.oem_model === oem_model) {
-                        const deviceInfo = await this.getCurrentState(device.dsn);
-                        result.push(new Item(device.dsn, device.product_name, deviceInfo.temperature, deviceInfo.heatingSetpoint, deviceInfo.humidity, deviceInfo.runningMode));
+                    function Item(id, name, currentTemperature, targetTemperature, humidity, heating) {
+                        this.id = id;
+                        this.name = name;
+                        this.current = currentTemperature;
+                        this.target = targetTemperature;
+                        this.humidity = humidity;
+                        this.heating = heating;
                     }
-                }
-                console.log(JSON.stringify(result))
-                return JSON.stringify(result);
+
+                    for (const e of JSON.parse(d.toString())) {
+                        const device = e.device;
+                        if (device.oem_model === oem_model) {
+                            const deviceInfo = await this.getCurrentState(device.dsn);
+                            result.push(new Item(device.dsn, device.product_name, deviceInfo.temperature, deviceInfo.heatingSetpoint, deviceInfo.humidity, deviceInfo.runningMode));
+                        }
+                    }
+                    resolve(JSON.stringify(result));
+                })
             })
-        })
 
-        req.on('error', error => {
-            console.error(error)
-        })
+            req.on('error', error => {
+                console.error(error)
+            })
 
-        req.end()
+            req.end()
+        })
     }
 
     getCurrentState(id) {

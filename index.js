@@ -157,7 +157,7 @@ class Index {
         })
     }
 
-    async updateState(id, temperature) {
+    async updateTemperature(id, temperature) {
         await this.login();
         if (!id || !temperature)
             throw new Error("Both ID and temperature named arguments must be set");

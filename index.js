@@ -160,31 +160,32 @@ class Index {
 
     async updateTemperature(id, temperature) {
         await this.login();
-        if (!id || !temperature)
-            throw new Error("Both ID and temperature named arguments must be set");
+        return new Promise((resolve, reject) => {
+            if (!id || !temperature)
+                throw new Error("Both ID and temperature named arguments must be set");
 
-        const data = JSON.stringify({"datapoint": {"value": temperature}})
-        const options = {
-            host: baseUrl,
-            port: 443,
-            path: apiVersion + "/dsns/" + id + "/properties/ep_9:sIT600TH:SetHeatingSetpoint_x100/datapoints.json?" + this.appendTimestamp(),
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': data.length,
-                'Authorization': 'Bearer ' + this.token
+            const data = JSON.stringify({"datapoint": {"value": temperature}})
+            const options = {
+                host: baseUrl,
+                port: 443,
+                path: apiVersion + "/dsns/" + id + "/properties/ep_9:sIT600TH:SetHeatingSetpoint_x100/datapoints.json?" + this.appendTimestamp(),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': data.length,
+                    'Authorization': 'Bearer ' + this.token
+                }
             }
-        }
 
-        const req = https.request(options, res => {
-            console.log(res.statusCode);
-            return res.statusCode;
+            const req = https.request(options, res => {
+                resolve(res.statusCode);
+            })
+            req.on('error', error => {
+                console.error(error)
+            })
+            req.write(data)
+            req.end()
         })
-        req.on('error', error => {
-            console.error(error)
-        })
-        req.write(data)
-        req.end()
     }
 
     appendTimestamp() {

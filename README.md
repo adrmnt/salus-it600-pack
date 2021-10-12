@@ -16,7 +16,7 @@ const Salus = require("salus-it6000-pack");
 const salus = new Salus({ username: "example@email.com", password: "password" });
 
 // get devices (only thermostats)
-salus.getDevices();
+await salus.getDevices().then(res => console.log(res))
 
 // set temperature
 salus.updateTemperature(id, temperature);

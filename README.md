@@ -18,8 +18,6 @@ const salus = new Salus({ username: "example@email.com", password: "password" })
 // get devices (only thermostats)
 await salus.getDevices().then(res => console.log(res))
 
-// set temperature
-await salus.updateTemperature("id","temp*100").then(res => console.log(res));
 ```
 
 ## Contributing

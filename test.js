@@ -1,5 +1,5 @@
 const Salus = require("./index");
-const salus = new Salus({username: "email@test.com", password: "Password!"});
+const salus = new Salus({username: "name@email.com", password: "Password!"});
 
 class TestClass {
     async myTest() {

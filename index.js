@@ -66,12 +66,13 @@ class Index {
         if (token !== null) {
             const allDevices = await this.getData(token, apiVersion + devicesUrl + this.appendTimestamp());
 
-            function Item(id, name, current, target, heating) {
+            function Item(id, name, current, target, heating, humidity) {
                 this.id = id;
                 this.name = name;
                 this.current = current;
                 this.target = target;
                 this.heating = heating;
+                this.humidity = humidity;
             }
 
             const result = [];
@@ -83,8 +84,9 @@ class Index {
                         const current = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propTemperature + ".json?" + this.appendTimestamp())).value.property.value / 100;
                         const target = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHeatingSetpoint + ".json?" + this.appendTimestamp())).value.property.value / 100;
                         const heating = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp())).value.property.value !== 0 ? true : false;
+                        const humidity = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHumidity + ".json?" + this.appendTimestamp())).value.property.value;
 
-                        result.push(new Item(device.dsn, device.product_name, current, target, heating));
+                        result.push(new Item(device.dsn, device.product_name, current, target, heating, humidity));
                     }
                 }
                 return result;
@@ -109,6 +111,9 @@ class Index {
         return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp())).value.property.value !== 0 ? true : false;
     }
 
+    async getDeviceCurrentRelativeHumidity(token, id) {
+        return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propHumidity + ".json?" + this.appendTimestamp())).value.property.value;
+    }
 
     getData(token, path) {
         return new Promise((resolve, reject) => {

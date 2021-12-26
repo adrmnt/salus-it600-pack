@@ -14,13 +14,12 @@ const propHumidity = prop + "SunnySetpoint_x100";
 const propHeatingSetpoint = prop + "HeatingSetpoint_x100";
 const propRunningMode = prop + "RunningMode";
 
-const oem_model = "SQ610";
-
 class Index {
 
-    constructor({username, password}) {
+    constructor({username, password, thermostatModel}) {
         this.username = username;
         this.password = password;
+        this.thermostatModel = thermostatModel;
     }
 
     async getToken() {
@@ -76,24 +75,24 @@ class Index {
             }
 
             const result = [];
-
             try {
                 for (const e of allDevices.value) {
                     const device = e.device;
-                    if (device.oem_model === oem_model) {
-                        const current = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propTemperature + ".json?" + this.appendTimestamp())).value.property.value / 100;
-                        const target = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHeatingSetpoint + ".json?" + this.appendTimestamp())).value.property.value / 100;
-                        const heating = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp())).value.property.value !== 0 ? true : false;
-                        const humidity = (await this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHumidity + ".json?" + this.appendTimestamp())).value.property.value;
+                    if (device.oem_model === this.thermostatModel.toUpperCase()) {
+                        const current = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propTemperature + ".json?" + this.appendTimestamp());
+                        const target = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHeatingSetpoint + ".json?" + this.appendTimestamp());
+                        const heating = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp());
+                        const humidity = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHumidity + ".json?" + this.appendTimestamp());
 
-                        result.push(new Item(device.dsn, device.product_name, current, target, heating, humidity));
+                        await Promise.all([current, target, heating, humidity]).then((values) => {
+                            result.push(new Item(device.dsn, device.product_name, values[0].value.property.value / 100, values[1].value.property.value / 100, values[2].value.property.value !== 0 ? true : false, values[3].value.property.value));
+                        });
                     }
                 }
                 return result;
             } catch (error) {
                 console.error(error);
             }
-
         } else {
             console.warn("Salus login failed");
         }
@@ -140,7 +139,6 @@ class Index {
     }
 
     async updateTemperature(token, id, temperature) {
-        await this.login();
         return new Promise((resolve, reject) => {
             if (!id || !temperature)
                 throw new Error("Both ID and temperature named arguments must be set");

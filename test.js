@@ -1,5 +1,5 @@
 const Salus = require("./index");
-const salus = new Salus({username: "name@email.com", password: "Password!"});
+const salus = new Salus({username: "user@email.com", password: "Password!", thermostatModel:"SQ610"});
 
 class TestClass {
     async myTest() {

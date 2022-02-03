@@ -12,7 +12,7 @@ const prop = "ep_9:sIT600TH:";
 const propTemperature = prop + "LocalTemperature_x100";
 const propHumidity = prop + "SunnySetpoint_x100";
 const propHeatingSetpoint = prop + "HeatingSetpoint_x100";
-const propRunningMode = prop + "RunningMode";
+const propRunningMode = prop + "RunningState";
 
 class Index {
 

@@ -78,7 +78,7 @@ class Index {
             try {
                 for (const e of allDevices.value) {
                     const device = e.device;
-                    if (device.oem_model === this.thermostatModel.toUpperCase()) {
+                    if (device.oem_model.toUpperCase() === this.thermostatModel.toUpperCase()) {
                         const current = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propTemperature + ".json?" + this.appendTimestamp());
                         const target = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHeatingSetpoint + ".json?" + this.appendTimestamp());
                         const heating = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp());

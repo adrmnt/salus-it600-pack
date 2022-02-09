@@ -16,10 +16,10 @@ const propRunningMode = prop + "RunningState";
 
 class Index {
 
-    constructor({username, password, thermostatModel}) {
+    constructor({username, password, thermostatModels=[]}) {
         this.username = username;
         this.password = password;
-        this.thermostatModel = thermostatModel;
+        this.thermostatModels = thermostatModels.map(function (e) { return e.toUpperCase() });
     }
 
     async getToken() {
@@ -78,7 +78,7 @@ class Index {
             try {
                 for (const e of allDevices.value) {
                     const device = e.device;
-                    if (device.oem_model.toUpperCase() === this.thermostatModel.toUpperCase()) {
+                    if (this.thermostatModels.includes(device.oem_model.toUpperCase())) {
                         const current = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propTemperature + ".json?" + this.appendTimestamp());
                         const target = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHeatingSetpoint + ".json?" + this.appendTimestamp());
                         const heating = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp());

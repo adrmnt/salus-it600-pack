@@ -13,13 +13,16 @@ const propTemperature = prop + "LocalTemperature_x100";
 const propHumidity = prop + "SunnySetpoint_x100";
 const propHeatingSetpoint = prop + "HeatingSetpoint_x100";
 const propRunningMode = prop + "RunningState";
+const propState = prop + "HoldType";
+const propUpdateTargetTemperature = prop + "SetHeatingSetpoint_x100";
+const propUpdateState = prop + "SetHoldType";
 
 class Index {
 
-    constructor({username, password, thermostatModels=[]}) {
+    constructor({username, password, thermostatModel}) {
         this.username = username;
         this.password = password;
-        this.thermostatModels = thermostatModels.map(function (e) { return e.toUpperCase() });
+        this.thermostatModel = thermostatModel;
     }
 
     async getToken() {
@@ -62,30 +65,32 @@ class Index {
     }
 
     async getDevices(token) {
-        if (token !== null) {
+        if (token != null) {
             const allDevices = await this.getData(token, apiVersion + devicesUrl + this.appendTimestamp());
 
-            function Item(id, name, current, target, heating, humidity) {
+            function Item(id, name, current, target, heating, humidity, state) {
                 this.id = id;
                 this.name = name;
                 this.current = current;
                 this.target = target;
                 this.heating = heating;
                 this.humidity = humidity;
+                this.state = state;
             }
 
             const result = [];
             try {
                 for (const e of allDevices.value) {
                     const device = e.device;
-                    if (this.thermostatModels.includes(device.oem_model.toUpperCase())) {
+                    if (device.oem_model == this.thermostatModel.toUpperCase()) {
                         const current = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propTemperature + ".json?" + this.appendTimestamp());
                         const target = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHeatingSetpoint + ".json?" + this.appendTimestamp());
                         const heating = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp());
                         const humidity = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propHumidity + ".json?" + this.appendTimestamp());
+                        const state = this.getData(token, apiVersion + "/dsns/" + device.dsn + "/properties/" + propState + ".json?" + this.appendTimestamp());
 
-                        await Promise.all([current, target, heating, humidity]).then((values) => {
-                            result.push(new Item(device.dsn, device.product_name, values[0].value.property.value / 100, values[1].value.property.value / 100, values[2].value.property.value !== 0 ? true : false, values[3].value.property.value));
+                        await Promise.all([current, target, heating, humidity, state]).then((values) => {
+                            result.push(new Item(device.dsn, device.product_name, values[0].value.property.value / 100, values[1].value.property.value / 100, values[2].value.property.value != 0 ? true : false, values[3].value.property.value, values[4].value.property.value));
                         });
                     }
                 }
@@ -98,6 +103,7 @@ class Index {
         }
     }
 
+
     async getDeviceCurrentTemperature(token, id) {
         return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propTemperature + ".json?" + this.appendTimestamp())).value.property.value / 100;
     }
@@ -107,11 +113,15 @@ class Index {
     }
 
     async getDeviceHeating(token, id) {
-        return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp())).value.property.value !== 0 ? true : false;
+        return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propRunningMode + ".json?" + this.appendTimestamp())).value.property.value != 0 ? true : false;
     }
 
     async getDeviceCurrentRelativeHumidity(token, id) {
         return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propHumidity + ".json?" + this.appendTimestamp())).value.property.value;
+    }
+
+    async getDeviceState(token, id) {
+        return (await this.getData(token, apiVersion + "/dsns/" + id + "/properties/" + propState + ".json?" + this.appendTimestamp())).value.property.value;
     }
 
     getData(token, path) {
@@ -138,16 +148,13 @@ class Index {
         })
     }
 
-    async updateTemperature(token, id, temperature) {
+    setData(token, path, data) {
         return new Promise((resolve, reject) => {
-            if (!id || !temperature)
-                throw new Error("Both ID and temperature named arguments must be set");
 
-            const data = JSON.stringify({"datapoint": {"value": temperature * 100}})
             const options = {
                 host: baseUrl,
                 port: 443,
-                path: apiVersion + "/dsns/" + id + "/properties/ep_9:sIT600TH:SetHeatingSetpoint_x100/datapoints.json?" + this.appendTimestamp(),
+                path: path,
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,6 +172,21 @@ class Index {
             req.write(data)
             req.end()
         })
+    }
+
+    async updateTemperature(token, id, temperature) {
+        const data = JSON.stringify({"datapoint": {"value": temperature * 100}});
+        return (await this.setData(token, apiVersion + "/dsns/" + id + "/properties/" + propUpdateTargetTemperature + "/datapoints.json?" + this.appendTimestamp(), data))
+    }
+
+    async updateState(token, id, state) {
+        /*
+        standby = 7
+        hold = 2
+        auto/ program = 0
+        */
+        const data = JSON.stringify({"datapoint": {"value": state}});
+        return (await this.setData(token, apiVersion + "/dsns/" + id + "/properties/" + propUpdateState + "/datapoints.json?" + this.appendTimestamp(), data))
     }
 
     appendTimestamp() {

@@ -19,7 +19,7 @@ class Index {
     constructor({username, password, thermostatModels=[]}) {
         this.username = username;
         this.password = password;
-        this.thermostatModels = thermostatModels.map(function (e) { return e.toUpperCase() });
+        this.thermostatModels = thermostatModels.map(function (e) { return e.toUpperCase().replace(/^VS(10|20)\w+/, "IT600THERMHW") });
     }
 
     async getToken() {

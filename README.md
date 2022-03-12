@@ -13,7 +13,7 @@ npm install salus-it600-pack
 
 ```javascript
 const Salus = require("salus-it6000-pack");
-const salus = new Salus({ username: "example@email.com", password: "password" });
+const salus = new Salus({ username: "example@email.com", password: "password", thermostatModels: ["model_1","model_2"] });
 
 // get devices (only thermostats)
 await salus.getDevices().then(res => console.log(res))
